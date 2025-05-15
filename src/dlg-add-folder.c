@@ -29,7 +29,6 @@
 #include <gio/gio.h>
 #include "dlg-add-folder.h"
 #include "file-utils.h"
-#include "fr-stock.h"
 #include "fr-window.h"
 #include "gtk-utils.h"
 #include "preferences.h"
@@ -40,23 +39,18 @@
 #define UNUSED_VARIABLE
 #endif
 
+#define GET_WIDGET(x) (GTK_WIDGET (gtk_builder_get_object (builder, (x))))
+
 typedef struct {
 	FrWindow    *window;
 	GSettings   *settings;
 	GtkWidget   *dialog;
 	GtkWidget   *include_subfold_checkbutton;
-	GtkWidget   *add_if_newer_checkbutton;
 	GtkWidget   *exclude_symlinks;
-	GtkWidget   *include_files_checkbutton;
+	GtkWidget   *add_if_newer_checkbutton;
 	GtkWidget   *include_files_entry;
-	GtkWidget   *include_files_label;
 	GtkWidget   *exclude_files_entry;
-	GtkWidget   *exclude_files_label;
 	GtkWidget   *exclude_folders_entry;
-	GtkWidget   *exclude_folders_label;
-	GtkWidget   *load_button;
-	GtkWidget   *save_button;
-	GtkWidget   *clear_button;
 	char        *last_options;
 } DialogData;
 
@@ -192,7 +186,7 @@ include_subfold_toggled_cb (GtkWidget *widget,
 	DialogData *data = callback_data;
 
 	gtk_widget_set_sensitive (data->exclude_symlinks,
-				  gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget)));
+	                          gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget)));
 
 	return FALSE;
 }
@@ -209,155 +203,40 @@ void
 add_folder_cb (GtkWidget *widget,
 	       void      *callback_data)
 {
-	GtkWidget   *file_sel;
+	GtkBuilder  *builder;
 	DialogData  *data;
-	GtkWidget   *main_box;
-	GtkWidget   *vbox;
-	GtkWidget   *grid;
+
+	builder = gtk_builder_new_from_resource (ENGRAMPA_RESOURCE_UI_PATH G_DIR_SEPARATOR_S "dlg-add-folder.ui");
 
 	data = g_new0 (DialogData, 1);
-	data->settings = g_settings_new (ENGRAMPA_SCHEMA_ADD);
 	data->window = callback_data;
-
-	data->dialog = file_sel =
-		gtk_file_chooser_dialog_new (_("Add a Folder"),
-					     GTK_WINDOW (data->window),
-					     GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
-					     "gtk-cancel", GTK_RESPONSE_CANCEL,
-					     FR_STOCK_ADD_FOLDER, GTK_RESPONSE_OK,
-					     "gtk-help", GTK_RESPONSE_HELP,
-					     NULL);
-
-	gtk_window_set_default_size (GTK_WINDOW (data->dialog), 530, 510);
-
-	gtk_file_chooser_set_select_multiple (GTK_FILE_CHOOSER (file_sel), FALSE);
-	gtk_file_chooser_set_local_only (GTK_FILE_CHOOSER (file_sel), FALSE);
-	gtk_dialog_set_default_response (GTK_DIALOG (file_sel), GTK_RESPONSE_OK);
-
-	data->add_if_newer_checkbutton = gtk_check_button_new_with_mnemonic (_("Add only if _newer"));
-	data->include_subfold_checkbutton = gtk_check_button_new_with_mnemonic (_("_Include subfolders"));
-	data->exclude_symlinks = gtk_check_button_new_with_mnemonic (_("Exclude folders that are symbolic lin_ks"));
-	gtk_widget_set_halign (data->exclude_symlinks, GTK_ALIGN_START);
-	gtk_widget_set_valign (data->exclude_symlinks, GTK_ALIGN_START);
-	gtk_widget_set_margin_start (data->exclude_symlinks, 12);
-
-	data->include_files_entry = gtk_entry_new ();
-	gtk_widget_set_tooltip_text (data->include_files_entry, _("example: *.o; *.bak"));
-	data->include_files_label = gtk_label_new_with_mnemonic (_("Include _files:"));
-	gtk_label_set_xalign (GTK_LABEL (data->include_files_label), 0.0);
-	gtk_label_set_mnemonic_widget (GTK_LABEL (data->include_files_label), data->include_files_entry);
-
-	data->exclude_files_entry = gtk_entry_new ();
-	gtk_widget_set_tooltip_text (data->exclude_files_entry, _("example: *.o; *.bak"));
-	data->exclude_files_label = gtk_label_new_with_mnemonic (_("E_xclude files:"));
-	gtk_label_set_xalign (GTK_LABEL (data->exclude_files_label), 0.0);
-	gtk_label_set_mnemonic_widget (GTK_LABEL (data->exclude_files_label), data->exclude_files_entry);
-
-	data->exclude_folders_entry = gtk_entry_new ();
-	gtk_widget_set_tooltip_text (data->exclude_folders_entry, _("example: *.o; *.bak"));
-	data->exclude_folders_label = gtk_label_new_with_mnemonic (_("_Exclude folders:"));
-	gtk_label_set_xalign (GTK_LABEL (data->exclude_folders_label), 0.0);
-	gtk_label_set_mnemonic_widget (GTK_LABEL (data->exclude_folders_label), data->exclude_folders_entry);
-
-	data->load_button = gtk_button_new_with_mnemonic (_("_Load Options"));
-	data->save_button = gtk_button_new_with_mnemonic (_("Sa_ve Options"));
-	data->clear_button = gtk_button_new_with_mnemonic (_("_Reset Options"));
-
-	main_box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 20);
-	gtk_container_set_border_width (GTK_CONTAINER (main_box), 0);
-	gtk_file_chooser_set_extra_widget (GTK_FILE_CHOOSER (file_sel), main_box);
-
-	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
-	gtk_container_set_border_width (GTK_CONTAINER (vbox), 0);
-	gtk_box_pack_start (GTK_BOX (main_box), vbox, TRUE, TRUE, 0);
-
-	gtk_box_pack_start (GTK_BOX (vbox), data->include_subfold_checkbutton,
-			    TRUE, TRUE, 0);
-
-	gtk_box_pack_start (GTK_BOX (vbox), data->exclude_symlinks, TRUE, TRUE, 0);
-
-	gtk_box_pack_start (GTK_BOX (vbox), data->add_if_newer_checkbutton,
-			    TRUE, TRUE, 0);
-
-	grid = gtk_grid_new ();
-	gtk_grid_set_row_spacing (GTK_GRID (grid), 6);
-	gtk_grid_set_column_spacing (GTK_GRID (grid), 6);
-	gtk_box_pack_start (GTK_BOX (vbox), grid,
-			    TRUE, TRUE, 0);
-
-	gtk_grid_attach (GTK_GRID (grid),
-			  data->include_files_label,
-			  0, 0,
-			  1, 1);
-	gtk_grid_attach (GTK_GRID (grid),
-			  data->include_files_entry,
-			  1, 0,
-			  3, 1);
-	gtk_grid_attach (GTK_GRID (grid),
-			  data->exclude_files_label,
-			  0, 1,
-			  1, 1);
-	gtk_grid_attach (GTK_GRID (grid),
-			  data->exclude_files_entry,
-			  1, 1,
-			  1, 1);
-	gtk_grid_attach (GTK_GRID (grid),
-			  data->exclude_folders_label,
-			  2, 1,
-			  1, 1);
-	gtk_grid_attach (GTK_GRID (grid),
-			  data->exclude_folders_entry,
-			  3, 1,
-			  1, 1);
-
-	/**/
-
-	vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
-	gtk_container_set_border_width (GTK_CONTAINER (vbox), 0);
-	gtk_box_pack_start (GTK_BOX (main_box), vbox, FALSE, FALSE, 0);
-
-	gtk_box_pack_start (GTK_BOX (vbox), data->load_button,
-			    FALSE, FALSE, 0);
-	gtk_box_pack_start (GTK_BOX (vbox), data->save_button,
-			    FALSE, FALSE, 0);
-	gtk_box_pack_start (GTK_BOX (vbox), data->clear_button,
-			    FALSE, FALSE, 0);
-
-	gtk_widget_show_all (main_box);
+	data->settings = g_settings_new (ENGRAMPA_SCHEMA_ADD);
+	data->dialog = GET_WIDGET ("dialog_add_folder");
+	data->add_if_newer_checkbutton = GET_WIDGET ("add_if_newer_checkbutton");
+	data->exclude_symlinks = GET_WIDGET ("exclude_symlinks");
+	data->include_subfold_checkbutton = GET_WIDGET ("include_subfold_checkbutton");
+	data->include_files_entry = GET_WIDGET ("include_files_entry");
+	data->exclude_files_entry = GET_WIDGET ("exclude_files_entry");
+	data->exclude_folders_entry = GET_WIDGET ("exclude_folders_entry");
 
 	/* set data */
-
 	dlg_add_folder_load_last_options (data);
 
 	/* signals */
+	gtk_builder_add_callback_symbols (builder,
+	                                  "on_dialog_add_folder_destroy",		G_CALLBACK (open_file_destroy_cb),
+	                                  "on_dialog_add_folder_response",		G_CALLBACK (file_sel_response_cb),
+	                                  "on_include_subfold_checkbutton_toggled",	G_CALLBACK (include_subfold_toggled_cb),
+	                                  "on_load_button_clicked",			G_CALLBACK (load_options_cb),
+	                                  "on_save_button_clicked",			G_CALLBACK (save_options_cb),
+	                                  "on_clear_button_clicked",			G_CALLBACK (clear_options_cb),
+	                                  NULL);
+	gtk_builder_connect_signals (builder, data);
 
-	g_signal_connect (G_OBJECT (file_sel),
-			  "destroy",
-			  G_CALLBACK (open_file_destroy_cb),
-			  data);
-	g_signal_connect (G_OBJECT (file_sel),
-			  "response",
-			  G_CALLBACK (file_sel_response_cb),
-			  data);
-	g_signal_connect (G_OBJECT (data->include_subfold_checkbutton),
-			  "toggled",
-			  G_CALLBACK (include_subfold_toggled_cb),
-			  data);
-	g_signal_connect (G_OBJECT (data->load_button),
-			  "clicked",
-			  G_CALLBACK (load_options_cb),
-			  data);
-	g_signal_connect (G_OBJECT (data->save_button),
-			  "clicked",
-			  G_CALLBACK (save_options_cb),
-			  data);
-	g_signal_connect (G_OBJECT (data->clear_button),
-			  "clicked",
-			  G_CALLBACK (clear_options_cb),
-			  data);
+	g_object_unref (builder);
 
-	gtk_window_set_modal (GTK_WINDOW (file_sel),TRUE);
-	gtk_widget_show (file_sel);
+	gtk_window_set_modal (GTK_WINDOW (data->dialog), TRUE);
+	gtk_widget_show (data->dialog);
 }
 
 
@@ -639,7 +518,6 @@ dlg_add_folder_save_last_options (DialogData *data)
 
 typedef struct {
 	DialogData   *data;
-	GtkBuilder *builder;
 	GtkWidget    *dialog;
 	GtkWidget    *aod_treeview;
 	GtkTreeModel *aod_model;
@@ -650,7 +528,6 @@ static void
 aod_destroy_cb (GtkWidget             *widget,
 		LoadOptionsDialogData *aod_data)
 {
-	g_object_unref (aod_data->builder);
 	g_free (aod_data);
 }
 
@@ -779,52 +656,35 @@ load_options_cb (GtkWidget  *w,
 		 DialogData *data)
 {
 	LoadOptionsDialogData *aod_data;
-	GtkWidget             *ok_button;
-	GtkWidget             *cancel_button;
-	GtkWidget             *remove_button;
+	GtkBuilder            *builder;
 	GtkCellRenderer       *renderer;
 	GtkTreeViewColumn     *column;
 
 	aod_data = g_new0 (LoadOptionsDialogData, 1);
 
 	aod_data->data = data;
-	aod_data->builder = _gtk_builder_new_from_resource ("add-options.ui");
-	if (aod_data->builder == NULL) {
-		g_free (aod_data);
-		return;
-	}
+	builder = gtk_builder_new_from_resource (ENGRAMPA_RESOURCE_UI_PATH G_DIR_SEPARATOR_S "add-options.ui");
 
 	/* Get the widgets. */
 
-	aod_data->dialog = _gtk_builder_get_widget (aod_data->builder, "add_options_dialog");
-	aod_data->aod_treeview = _gtk_builder_get_widget (aod_data->builder, "aod_treeview");
-
-	ok_button = _gtk_builder_get_widget (aod_data->builder, "aod_okbutton");
-	cancel_button = _gtk_builder_get_widget (aod_data->builder, "aod_cancelbutton");
-	remove_button = _gtk_builder_get_widget (aod_data->builder, "aod_remove_button");
+	aod_data->dialog = GET_WIDGET ("add_options_dialog");
+	aod_data->aod_treeview = GET_WIDGET ("aod_treeview");
 
 	/* Set the signals handlers. */
+	gtk_builder_add_callback_symbols (builder,
+	                                  "on_add_options_dialog_destroy",	G_CALLBACK (aod_destroy_cb),
+	                                  "on_aod_treeview_row_activated",	G_CALLBACK (aod_activated_cb),
+	                                  "on_aod_ok_button_clicked",		G_CALLBACK (aod_apply_cb),
+	                                  "on_aod_cancel_button_clicked",	G_CALLBACK (aod_remove_cb),
+	                                  NULL);
+	gtk_builder_connect_signals (builder, aod_data);
 
-	g_signal_connect (G_OBJECT (aod_data->dialog),
-			  "destroy",
-			  G_CALLBACK (aod_destroy_cb),
-			  aod_data);
-	g_signal_connect (G_OBJECT (aod_data->aod_treeview),
-			  "row_activated",
-			  G_CALLBACK (aod_activated_cb),
-			  aod_data);
-	g_signal_connect_swapped (G_OBJECT (cancel_button),
+	g_signal_connect_swapped (gtk_builder_get_object (builder, "aod_cancelbutton"),
 				  "clicked",
 				  G_CALLBACK (gtk_widget_destroy),
 				  G_OBJECT (aod_data->dialog));
-	g_signal_connect (G_OBJECT (ok_button),
-			  "clicked",
-			  G_CALLBACK (aod_apply_cb),
-			  aod_data);
-	g_signal_connect (G_OBJECT (remove_button),
-			  "clicked",
-			  G_CALLBACK (aod_remove_cb),
-			  aod_data);
+
+	g_object_unref (builder);
 
 	/* Set data. */
 

@@ -1,8 +1,101 @@
-engrampa (1.24.1-deepin1) unstable; urgency=medium
+engrampa (1.26.2-4) unstable; urgency=medium
 
-  * Rebuild
+  * debian/patches:
+    + Add 1002_implicit-function-declaration.patch. (Closes: #1066304).
 
- -- Deepin Packages Builder <packages@deepin.org>  Mon, 14 Nov 2022 17:35:52 +0800
+ -- Mike Gabriel <sunweaver@debian.org>  Mon, 25 Mar 2024 13:08:32 +0100
+
+engrampa (1.26.2-3) unstable; urgency=medium
+
+  * debian/control:
+    + Amend previous upload. Move non-free bin:pkg 7zip-rar to Suggests:.
+      (Closes: #1063867).
+
+ -- Mike Gabriel <sunweaver@debian.org>  Tue, 13 Feb 2024 21:36:40 +0100
+
+engrampa (1.26.2-2) unstable; urgency=medium
+
+  * debian/control:
+    + Switch from p7zip-full to 7zip and 7zip-rar. The code has already been
+      patched, only the dependency change was missing. (Closes: #1063564).
+
+ -- Mike Gabriel <sunweaver@debian.org>  Tue, 13 Feb 2024 17:06:45 +0100
+
+engrampa (1.26.2-1) unstable; urgency=medium
+
+  * New upstream release.
+    - CVE-2023-52138: Use unar instead of cpio. (Closes: #1063494).
+
+ -- Mike Gabriel <sunweaver@debian.org>  Sun, 11 Feb 2024 12:17:26 +0100
+
+engrampa (1.26.1-4) unstable; urgency=medium
+
+  * debian/patches:
+    + Add 004_Add-MIME-aliases-for-gzip-and-bzip2.patch. Add MIME type aliases
+      for application/bzip2, application/x-bzip2 and application/gzip.
+    + Add 0003_7z-Fix-accepting-RAR-archives-when-unar-open-zip-tru.patch. Fix
+      accepting RAR archives when unar-open-zip=true.
+  * debian/copyright:
+    + Update copyright attribution for debian/.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Wed, 31 Jan 2024 13:33:31 +0100
+
+engrampa (1.26.1-3) unstable; urgency=medium
+
+  * debian/patches:
+    + Add 0002_7zip.patch. command-7z: Add new 7-zip(7zz and 7zzs) project
+      support. (Closes: #1061510).
+
+ -- Mike Gabriel <sunweaver@debian.org>  Thu, 25 Jan 2024 21:07:36 +0100
+
+engrampa (1.26.1-2) unstable; urgency=medium
+
+  * debian/patches:
+    + Add 0001_fix-segfault-on-opening-deb-files.patch. Fix segfault on
+      opening .deb files (due to recent changes in Debian testing/unstable).
+      (Closes: #1060405).
+
+ -- Mike Gabriel <sunweaver@debian.org>  Wed, 10 Jan 2024 21:21:07 +0100
+
+engrampa (1.26.1-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Fix archive 'save as' function. (Closes: #913075).
+  * debian/control:
+    + Bump Standards-Version: to 4.6.2. No changes needed.
+  * debian/copyright:
+    + Update copyright attribution for debian/.
+  * debian/patches:
+    + Add 2001_fix-FTCBFS.patch. Fix FTCBFS in AC_RUN_IFELSE. (Closes:
+      #971810).
+    + Add 1001_add-shebang-to-isoinfo-script.patch. Add missing shebang.
+      Thanks, lintian.
+  * debian/rules:
+    + Install executables to /usr/libexec directory.
+  * debian/engrampa.install:
+    + Adjust to libexecdir installation path change.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Fri, 29 Dec 2023 07:24:57 +0100
+
+engrampa (1.26.0-1) unstable; urgency=medium
+
+  [ Martin Wimpress ]
+  * New upstream release.
+  * debian/*.install:
+    + Updated for MATE 1.26.
+
+  [ Mike Gabriel ]
+  * debian/control:
+    + Bump Standards-Version: to 4.6.0. No changes needed.
+    + Add B-D: mate-submodules-source (>= 0.0~git20210623.f3091f9).
+  * debian/rules:
+    + Unpack libegg (mate-submodules) at the beginning of dh_auto_configure.
+  * debian/watch:
+    + Use format version 4.
+  * debian/copyright:
+    + Update copyright attributions.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Sun, 12 Dec 2021 16:00:52 +0100
 
 engrampa (1.24.1-1) unstable; urgency=medium
 

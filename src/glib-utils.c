@@ -378,7 +378,7 @@ search_util_get_regexps (const char         *pattern_string,
 	if (patterns == NULL)
 		return NULL;
 
-	regexps = g_new0 (GRegex*, n_fields (patterns) + 1);
+	regexps = g_new0 (GRegex*, g_strv_length (patterns) + 1);
 	for (i = 0; patterns[i] != NULL; i++)
 		regexps[i] = g_regex_new (patterns[i],
 					  G_REGEX_OPTIMIZE | compile_options,
@@ -452,21 +452,6 @@ get_last_field (const char *line,
 }
 
 
-int
-n_fields (char **str_array)
-{
-	int i;
-
-	if (str_array == NULL)
-		return 0;
-
-	i = 0;
-	while (str_array[i] != NULL)
-		i++;
-	return i;
-}
-
-
 void
 debug (const char *file,
        int         line,
@@ -488,16 +473,6 @@ debug (const char *file,
 	g_free (str);
 #else /* ! DEBUG */
 #endif
-}
-
-
-void
-g_ptr_array_free_full (GPtrArray *array,
-                       GFunc      free_func,
-                       gpointer   user_data)
-{
-	g_ptr_array_foreach (array, free_func, user_data);
-	g_ptr_array_free (array, TRUE);
 }
 
 
