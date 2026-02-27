@@ -27,15 +27,13 @@
 #include <gio/gio.h>
 #include "dlg-new.h"
 #include "file-utils.h"
-#include "fr-stock.h"
 #include "gtk-utils.h"
 #include "fr-init.h"
 #include "preferences.h"
 
 
-#define GET_WIDGET(x) (_gtk_builder_get_widget (data->builder, (x)))
+#define GET_WIDGET(x) (GTK_WIDGET (gtk_builder_get_object (builder, (x))))
 #define DEFAULT_EXTENSION ".tar.gz"
-#define BAD_CHARS "/\\*"
 #define MEGABYTE (1024.0 * 1024.0)
 
 
@@ -44,7 +42,6 @@ static void
 destroy_cb (GtkWidget  *widget,
 	    DlgNewData *data)
 {
-	g_object_unref (data->builder);
 	g_free (data);
 }
 
@@ -267,38 +264,29 @@ dlg_new_archive (FrWindow  *window,
 		int        *supported_types,
 		const char *default_name)
 {
+	GtkBuilder    *builder;
 	DlgNewData    *data;
-	GtkWidget     *n_new_button;
-        GSettings *settings;
-	/*char          *default_ext;*/
+	GSettings     *settings;
 	int            i;
 
 	data = g_new0 (DlgNewData, 1);
-
-	data->builder = _gtk_builder_new_from_resource ("new.ui");
-	if (data->builder == NULL) {
-		g_free (data);
-		return NULL;
-	}
-
+	builder = gtk_builder_new_from_resource (ENGRAMPA_RESOURCE_UI_PATH G_DIR_SEPARATOR_S "new.ui");
 	data->window = window;
 	data->supported_types = supported_types;
 	sort_mime_types_by_description (data->supported_types);
 
 	/* Get the widgets. */
 
-	data->dialog = _gtk_builder_get_widget (data->builder, "filechooserdialog");
+	data->dialog = GET_WIDGET ("dialog");
 
-	data->n_password_entry = _gtk_builder_get_widget (data->builder, "n_password_entry");
-	data->n_password_label = _gtk_builder_get_widget (data->builder, "n_password_label");
-	data->n_other_options_expander = _gtk_builder_get_widget (data->builder, "n_other_options_expander");
-	data->n_encrypt_header_checkbutton = _gtk_builder_get_widget (data->builder, "n_encrypt_header_checkbutton");
+	data->n_password_entry = GET_WIDGET ("n_password_entry");
+	data->n_password_label = GET_WIDGET ("n_password_label");
+	data->n_other_options_expander = GET_WIDGET ("n_other_options_expander");
+	data->n_encrypt_header_checkbutton = GET_WIDGET ("n_encrypt_header_checkbutton");
 
-	data->n_volume_checkbutton = _gtk_builder_get_widget (data->builder, "n_volume_checkbutton");
-	data->n_volume_spinbutton = _gtk_builder_get_widget (data->builder, "n_volume_spinbutton");
-	data->n_volume_box = _gtk_builder_get_widget (data->builder, "n_volume_box");
-
-	n_new_button = _gtk_builder_get_widget (data->builder, "n_new_button");
+	data->n_volume_checkbutton = GET_WIDGET ("n_volume_checkbutton");
+	data->n_volume_spinbutton = GET_WIDGET ("n_volume_spinbutton");
+	data->n_volume_box = GET_WIDGET ("n_volume_box");
 
 	/* Set widgets data. */
 
@@ -310,8 +298,6 @@ dlg_new_archive (FrWindow  *window,
 
 	/**/
 
-	gtk_button_set_use_stock (GTK_BUTTON (n_new_button), TRUE);
-	gtk_button_set_label (GTK_BUTTON (n_new_button), FR_STOCK_CREATE_ARCHIVE);
 	gtk_expander_set_expanded (GTK_EXPANDER (data->n_other_options_expander), FALSE);
 	settings = g_settings_new (ENGRAMPA_SCHEMA_GENERAL);
         gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (data->n_encrypt_header_checkbutton), g_settings_get_boolean (settings, PREF_GENERAL_ENCRYPT_HEADER));
@@ -364,46 +350,24 @@ dlg_new_archive (FrWindow  *window,
 
 	/* Set the signals handlers. */
 
-	/*g_signal_connect (G_OBJECT (data->dialog),
-			  "response",
-			  G_CALLBACK (new_file_response_cb),
-			  data);*/
+	gtk_builder_add_callback_symbols (builder,
+	                                  "on_dialog_destroy", G_CALLBACK (destroy_cb),
+	                                  "on_n_password_entry_changed", G_CALLBACK (password_entry_changed_cb),
+	                                  "on_n_volume_checkbutton_toggled", G_CALLBACK (volume_toggled_cb),
+	                                  NULL);
+	gtk_builder_connect_signals (builder, data);
 
-	g_signal_connect (G_OBJECT (data->dialog),
-			  "destroy",
-			  G_CALLBACK (destroy_cb),
-			  data);
-
-	/*
-	g_signal_connect_swapped (G_OBJECT (cancel_button),
-				  "clicked",
-				  G_CALLBACK (gtk_widget_destroy),
-				  G_OBJECT (data->dialog));
-	g_signal_connect (G_OBJECT (add_button),
-			  "clicked",
-			  G_CALLBACK (add_clicked_cb),
-			  data);*/
-
-	/* FIXME g_signal_connect (G_OBJECT (data->n_archive_type_combo_box),
-			  "changed",
-			  G_CALLBACK (archive_type_combo_box_changed_cb),
-			  data); */
-	g_signal_connect (G_OBJECT (data->n_password_entry),
-			  "changed",
-			  G_CALLBACK (password_entry_changed_cb),
-			  data);
-	g_signal_connect (G_OBJECT (data->n_volume_checkbutton),
-			  "toggled",
-			  G_CALLBACK (volume_toggled_cb),
-			  data);
 	g_signal_connect (G_OBJECT (data->format_chooser),
 			  "selection-changed",
 			  G_CALLBACK (format_chooser_selection_changed_cb),
 			  data);
+
 	g_signal_connect_after (GET_WIDGET ("other_oprtions_alignment"),
 				"unmap",
 				G_CALLBACK (options_expander_unmap_cb),
 				data->format_chooser);
+
+	g_object_unref (builder);
 
 	/* Run dialog. */
 

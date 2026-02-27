@@ -43,9 +43,6 @@
 #include "fr-init.h"
 
 
-#define BUF_SIZE 4096
-#define FILE_PREFIX    "file://"
-#define FILE_PREFIX_L  7
 #define SPECIAL_DIR(x) ((strcmp ((x), "..") == 0) || (strcmp ((x), ".") == 0))
 
 
@@ -906,12 +903,12 @@ get_temp_work_dir (const char *parent_folder)
 {
 	guint64  max_size = 0;
 	char    *best_folder = NULL;
-	int      i;
 	char    *template;
 	char    *result = NULL;
 
 	if (parent_folder == NULL) {
 		/* find the folder with more free space. */
+		int i;
 
 		for (i = 0; try_folder[i] != NULL; i++) {
 			char    *folder;

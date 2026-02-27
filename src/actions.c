@@ -898,15 +898,15 @@ activate_action_about (GtkAction *action,
     gtk_show_about_dialog (GTK_WINDOW (window),
                    "version", VERSION,
                    "copyright", _("Copyright \xc2\xa9 2001–2010 Free Software Foundation, Inc.\n"
-                                  "Copyright \xc2\xa9 2012–2020 The MATE developers"),
-                   "comments", _("An archive manager for MATE."),
+                                  "Copyright \xc2\xa9 2012–2021 The MATE developers"),
+                   "comments", _("Engrampa is an archive manager for the MATE Desktop Environment."),
                    "authors", authors,
                    "documenters", documenters,
                    "translator-credits", _("translator-credits"),
                    "logo-icon-name", "engrampa",
                    "license", license_text,
                    "wrap-license", TRUE,
-                   "website", "https://mate-desktop.org",
+                   "website", PACKAGE_URL,
                    NULL);
 
     g_strfreev (authors);

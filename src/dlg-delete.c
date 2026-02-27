@@ -27,11 +27,11 @@
 #include "file-utils.h"
 #include "dlg-delete.h"
 
+#define GET_WIDGET(x) (GTK_WIDGET (gtk_builder_get_object (builder, (x))))
 
 typedef struct {
 	FrWindow  *window;
 	GList     *selected_files;
-	GtkBuilder *builder;
 
 	GtkWidget *dialog;
 	GtkWidget *d_all_files_radio;
@@ -47,7 +47,6 @@ destroy_cb (GtkWidget  *widget,
 	    DialogData *data)
 {
 	path_list_free (data->selected_files);
-	g_object_unref (G_OBJECT (data->builder));
 	g_free (data);
 }
 
@@ -107,30 +106,21 @@ static void
 dlg_delete__common (FrWindow *window,
 	            GList    *selected_files)
 {
+	GtkBuilder *builder;
 	DialogData *data;
-	GtkWidget  *cancel_button;
-	GtkWidget  *ok_button;
 
 	data = g_new (DialogData, 1);
 	data->window = window;
 	data->selected_files = selected_files;
-
-	data->builder = _gtk_builder_new_from_resource ("delete.ui");
-	if (data->builder == NULL) {
-		g_free (data);
-		return;
-	}
+	builder = gtk_builder_new_from_resource (ENGRAMPA_RESOURCE_UI_PATH G_DIR_SEPARATOR_S "delete.ui");
 
 	/* Get the widgets. */
 
-	data->dialog = _gtk_builder_get_widget (data->builder, "delete_dialog");
-	data->d_all_files_radio = _gtk_builder_get_widget (data->builder, "d_all_files_radio");
-	data->d_selected_files_radio = _gtk_builder_get_widget (data->builder, "d_selected_files_radio");
-	data->d_files_radio = _gtk_builder_get_widget (data->builder, "d_files_radio");
-	data->d_files_entry = _gtk_builder_get_widget (data->builder, "d_files_entry");
-
-	ok_button = _gtk_builder_get_widget (data->builder, "d_ok_button");
-	cancel_button = _gtk_builder_get_widget (data->builder, "d_cancel_button");
+	data->dialog = GET_WIDGET ("delete_dialog");
+	data->d_all_files_radio = GET_WIDGET ("d_all_files_radio");
+	data->d_selected_files_radio = GET_WIDGET ("d_selected_files_radio");
+	data->d_files_radio = GET_WIDGET ("d_files_radio");
+	data->d_files_entry = GET_WIDGET ("d_files_entry");
 
 	/* Set widgets data. */
 
@@ -142,23 +132,20 @@ dlg_delete__common (FrWindow *window,
 	}
 
 	/* Set the signals handlers. */
+	gtk_builder_add_callback_symbols (builder,
+	                                  "on_delete_dialog_destroy",	G_CALLBACK (destroy_cb),
+	                                  "on_d_ok_button_clicked",	G_CALLBACK (ok_clicked_cb),
+	                                  "on_d_files_entry_changed",	G_CALLBACK (entry_changed_cb),
+	                                  NULL);
 
-	g_signal_connect (G_OBJECT (data->dialog),
-			  "destroy",
-			  G_CALLBACK (destroy_cb),
-			  data);
-	g_signal_connect_swapped (G_OBJECT (cancel_button),
+	gtk_builder_connect_signals (builder, data);
+
+	g_signal_connect_swapped (gtk_builder_get_object (builder, "d_cancel_button"),
 				  "clicked",
 				  G_CALLBACK (gtk_widget_destroy),
 				  G_OBJECT (data->dialog));
-	g_signal_connect (G_OBJECT (ok_button),
-			  "clicked",
-			  G_CALLBACK (ok_clicked_cb),
-			  data);
-	g_signal_connect (G_OBJECT (data->d_files_entry),
-			  "changed",
-			  G_CALLBACK (entry_changed_cb),
-			  data);
+
+	g_object_unref (builder);
 
 	/* Run dialog. */
 

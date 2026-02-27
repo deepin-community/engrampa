@@ -19,7 +19,7 @@
      </abstract>
 
     <copyright xml:lang="en">
-      <year>2019-2020</year>
+      <year>2019-2021</year>
       <holder>MATE Documentation Project</holder>
     </copyright>
     <copyright>
@@ -268,7 +268,7 @@
               <entry align="left"><para><filename>.ace</filename></para></entry>
             </row>
             <row valign="top">
-              <entry><para>Alzip archive</para></entry>
+              <entry><para>AlZip archive</para></entry>
               <entry align="left"><para><filename>.alz</filename></para></entry>
             </row>
             <row valign="top">
@@ -292,7 +292,11 @@
               <entry align="left"><para><filename>.deb</filename>, <filename>.udeb</filename></para></entry>
             </row>
             <row valign="top">
-              <entry><para>raw CD image</para></entry>
+              <entry><para>Electronic Publication</para></entry>
+              <entry align="left"><para><filename>.epub</filename></para></entry>
+            </row>
+            <row valign="top">
+              <entry><para>RAW CD image (ISO 9660)</para></entry>
               <entry align="left"><para><filename>.iso</filename></para></entry>
             </row>
             <row valign="top">
@@ -316,7 +320,7 @@
               <entry align="left"><para><filename>.rar</filename></para></entry>
             </row>
             <row valign="top">
-              <entry><para>Comic Book (Rar-compressed)</para></entry>
+              <entry><para>Comic Book (RAR-compressed)</para></entry>
               <entry align="left"><para><filename>.cbr</filename></para></entry>
             </row>
             <row valign="top">
@@ -337,7 +341,7 @@
             </row>
             <row valign="top">
               <entry><para>Tar archive compressed with <command>gzip</command></para></entry>
-              <entry align="left"><para><filename>.tar.gz</filename> or <filename>.tgz</filename></para></entry>
+              <entry align="left"><para><filename>.tar.gz</filename> or <filename>.tgz</filename> or <filename>.taz</filename></para></entry>
             </row>
             <row valign="top">
               <entry><para>Tar archive compressed with <command>lzip</command></para></entry>
@@ -349,7 +353,7 @@
             </row>
             <row valign="top">
               <entry><para>Tar archive compressed with <command>compress</command></para></entry>
-              <entry align="left"><para><filename>.tar.Z</filename> or <filename>.taz</filename></para></entry>
+              <entry align="left"><para><filename>.tar.Z</filename> or <filename>.taZ</filename></para></entry>
             </row>
              <row valign="top">
               <entry><para>Tar archive compressed with <command>7zip</command></para></entry>
@@ -360,11 +364,11 @@
               <entry align="left"><para><filename>.bin</filename> or <filename>.sit</filename></para></entry>
             </row>
             <row valign="top">
-              <entry><para>Zip archive</para></entry>
+              <entry><para>ZIP archive</para></entry>
               <entry align="left"><para><filename>.zip</filename></para></entry>
             </row>
             <row valign="top">
-              <entry><para>Comic Book (Zip-compressed)</para></entry>
+              <entry><para>Comic Book (ZIP-compressed)</para></entry>
               <entry align="left"><para><filename>.cbz</filename></para></entry>
             </row>
             <row valign="top">

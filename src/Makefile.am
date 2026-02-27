@@ -15,7 +15,7 @@ shdir = $(libexecdir)/engrampa/
 endif
 
 AM_CPPFLAGS =						\
-	-I$(top_srcdir)/copy-n-paste/			\
+	-I$(top_srcdir)/mate-submodules/libegg/			\
 	-I$(top_srcdir)					\
 	-I$(top_builddir)				\
 	-DENGRAMPA_RESOURCE_UI_PATH="\"/org/mate/Engrampa/ui\"" \
@@ -103,6 +103,8 @@ COMMON_SOURCES = 			\
 	fr-command-jar.c		\
 	fr-command-lha.c		\
 	fr-command-lha.h		\
+	fr-command-nomarch.c		\
+	fr-command-nomarch.h		\
 	fr-command-rar.c		\
 	fr-command-rar.h		\
 	fr-command-rpm.c		\
@@ -125,8 +127,6 @@ COMMON_SOURCES = 			\
 	fr-init.h			\
 	fr-list-model.c			\
 	fr-list-model.h			\
-	fr-stock.c			\
-	fr-stock.h			\
 	fr-proc-error.c			\
 	fr-proc-error.h			\
 	fr-process.c			\
@@ -196,7 +196,7 @@ engrampa_SOURCES = 			\
 	main.c
 
 engrampa_LDADD =					\
-	$(top_builddir)/copy-n-paste/libeggsmclient.la	\
+	$(top_builddir)/mate-submodules/libegg/libegg.la	\
 	$(FR_LIBS)					\
 	${JSON_GLIB_LIBS}
 

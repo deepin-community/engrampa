@@ -21,6 +21,8 @@
  */
 
 #include <config.h>
+#include <glib/gi18n.h>
+
 #include <string.h>
 #include <gtk/gtk.h>
 #include "dlg-update.h"
@@ -30,6 +32,7 @@
 #include "fr-init.h"
 #include "fr-window.h"
 
+#define GET_WIDGET(x) (GTK_WIDGET (gtk_builder_get_object (builder, (x))))
 
 enum {
 	IS_SELECTED_COLUMN,
@@ -40,7 +43,6 @@ enum {
 
 typedef struct {
 	FrWindow     *window;
-	GtkBuilder *builder;
 
 	GtkWidget    *update_file_dialog;
 	GtkWidget    *update_file_primary_text_label;
@@ -63,7 +65,6 @@ dlg_update__destroy_cb (GtkWidget  *widget,
 		        DialogData *data)
 {
 	fr_window_update_dialog_closed (data->window);
-	g_object_unref (G_OBJECT (data->builder));
 	if (data->file_list != NULL)
 		g_list_free (data->file_list);
 	g_free (data);
@@ -120,7 +121,7 @@ update_cb (GtkWidget *widget,
 static void
 update_file_list (DialogData *data)
 {
-	gboolean     n_files;
+	guint        n_files;
 	GList       *scan;
 	GtkTreeIter  iter;
 
@@ -173,10 +174,11 @@ update_file_list (DialogData *data)
 
 		/* secondary text */
 
-		label = g_strdup_printf (ngettext ("The file has been modified with an external application. If you don't update the file in the archive, all of your changes will be lost.",
-						   "%d files have been modified with an external application. If you don't update the files in the archive, all of your changes will be lost.",
-						   n_files),
-					 n_files);
+		label = g_strdup_printf (g_dngettext (GETTEXT_PACKAGE,
+		                                      "The file has been modified with an external application. If you don't update the file in the archive, all of your changes will be lost.",
+		                                      "%u files have been modified with an external application. If you don't update the files in the archive, all of your changes will be lost.",
+		                                      (gulong) n_files),
+		                         n_files);
 		gtk_label_set_text (GTK_LABEL (data->update_file_secondary_text_label), label);
 		g_free (label);
 	}
@@ -201,10 +203,11 @@ update_file_list (DialogData *data)
 
 		/* secondary text */
 
-		label = g_strdup_printf (ngettext ("The file has been modified with an external application. If you don't update the file in the archive, all of your changes will be lost.",
-						   "%d files have been modified with an external application. If you don't update the files in the archive, all of your changes will be lost.",
-						   n_files),
-					 n_files);
+		label = g_strdup_printf (g_dngettext (GETTEXT_PACKAGE,
+		                                      "The file has been modified with an external application. If you don't update the file in the archive, all of your changes will be lost.",
+		                                      "%u files have been modified with an external application. If you don't update the files in the archive, all of your changes will be lost.",
+		                                      (gulong) n_files),
+		                         n_files);
 		gtk_label_set_text (GTK_LABEL (data->update_files_secondary_text_label), label);
 		g_free (label);
 	}
@@ -276,66 +279,50 @@ is_selected_toggled (GtkCellRendererToggle *cell,
 gpointer
 dlg_update (FrWindow *window)
 {
+	GtkBuilder        *builder;
 	DialogData        *data;
-	GtkWidget         *update_file_ok_button;
-	GtkWidget         *update_file_cancel_button;
-	GtkWidget         *update_files_cancel_button;
 	GtkCellRenderer   *renderer;
 	GtkTreeViewColumn *column;
 
 	data = g_new0 (DialogData, 1);
-
-	data->builder = _gtk_builder_new_from_resource ("update.ui");
-	if (data->builder == NULL) {
-		g_free (data);
-		return NULL;
-	}
-
+	builder = gtk_builder_new_from_resource (ENGRAMPA_RESOURCE_UI_PATH G_DIR_SEPARATOR_S "update.ui");
 	data->file_list = NULL;
 	data->window = window;
 
 	/* Get the widgets. */
 
-	data->update_file_dialog = _gtk_builder_get_widget (data->builder, "update_file_dialog");
-	data->update_file_primary_text_label = _gtk_builder_get_widget (data->builder, "update_file_primary_text_label");
-	data->update_file_secondary_text_label = _gtk_builder_get_widget (data->builder, "update_file_secondary_text_label");
+	data->update_file_dialog = GET_WIDGET ("update_file_dialog");
+	data->update_file_primary_text_label = GET_WIDGET ("update_file_primary_text_label");
+	data->update_file_secondary_text_label = GET_WIDGET ("update_file_secondary_text_label");
 
-	update_file_ok_button = _gtk_builder_get_widget (data->builder, "update_file_ok_button");
-	update_file_cancel_button = _gtk_builder_get_widget (data->builder, "update_file_cancel_button");
-
-	data->update_files_dialog = _gtk_builder_get_widget (data->builder, "update_files_dialog");
-	data->update_files_primary_text_label = _gtk_builder_get_widget (data->builder, "update_files_primary_text_label");
-	data->update_files_secondary_text_label = _gtk_builder_get_widget (data->builder, "update_files_secondary_text_label");
-	data->update_files_treeview = _gtk_builder_get_widget (data->builder, "update_files_treeview");
-	data->update_files_ok_button = _gtk_builder_get_widget (data->builder, "update_files_ok_button");
-	update_files_cancel_button = _gtk_builder_get_widget (data->builder, "update_files_cancel_button");
+	data->update_files_dialog = GET_WIDGET ("update_files_dialog");
+	data->update_files_primary_text_label = GET_WIDGET ("update_files_primary_text_label");
+	data->update_files_secondary_text_label = GET_WIDGET ("update_files_secondary_text_label");
+	data->update_files_treeview = GET_WIDGET ("update_files_treeview");
+	data->update_files_ok_button = GET_WIDGET ("update_files_ok_button");
 
 	/* Set the signals handlers. */
 
-	g_signal_connect (G_OBJECT (data->update_file_dialog),
-			  "destroy",
-			  G_CALLBACK (dlg_update__destroy_cb),
-			  data);
-	g_signal_connect (G_OBJECT (update_file_ok_button),
-			  "clicked",
-			  G_CALLBACK (update_cb),
-			  data);
-	g_signal_connect_swapped (G_OBJECT (update_file_cancel_button),
+	gtk_builder_add_callback_symbols (builder,
+	                                  "on_update_file_dialog_destroy",	G_CALLBACK (dlg_update__destroy_cb),
+	                                  "on_update_file_ok_button_clicked",	G_CALLBACK (update_cb),
+	                                  "on_update_files_dialog_destroy",	G_CALLBACK (dlg_update__destroy_cb),
+	                                  "on_update_files_ok_button_clicked",	G_CALLBACK (update_cb),
+	                                  NULL);
+
+	gtk_builder_connect_signals (builder, data);
+
+	g_signal_connect_swapped (gtk_builder_get_object (builder, "update_file_cancel_button"),
 				  "clicked",
 				  G_CALLBACK (gtk_widget_destroy),
 				  G_OBJECT (data->update_file_dialog));
-	g_signal_connect (G_OBJECT (data->update_files_dialog),
-			  "destroy",
-			  G_CALLBACK (dlg_update__destroy_cb),
-			  data);
-	g_signal_connect (G_OBJECT (data->update_files_ok_button),
-			  "clicked",
-			  G_CALLBACK (update_cb),
-			  data);
-	g_signal_connect_swapped (G_OBJECT (update_files_cancel_button),
+
+	g_signal_connect_swapped (gtk_builder_get_object (builder, "update_files_cancel_button"),
 				  "clicked",
 				  G_CALLBACK (gtk_widget_destroy),
 				  G_OBJECT (data->update_files_dialog));
+
+	g_object_unref (builder);
 
 	/* Set dialog data. */
 

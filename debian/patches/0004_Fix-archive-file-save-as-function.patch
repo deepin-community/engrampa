@@ -1,0 +1,107 @@
+From a27a7a6de2d47f6d3ca558f6f980b03376ae5044 Mon Sep 17 00:00:00 2001
+From: zhuyaliang <15132211195@163.com>
+Date: Wed, 15 Mar 2023 10:57:07 +0800
+Subject: [PATCH 4/5] Fix archive file save as function
+
+Signed-off-by: Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+---
+ src/actions.c   | 20 ++++++++++++++++++--
+ src/dlg-new.c   |  2 ++
+ src/dlg-new.h   |  1 +
+ src/fr-window.c |  2 +-
+ 4 files changed, 22 insertions(+), 3 deletions(-)
+
+diff --git a/src/actions.c b/src/actions.c
+index b55cab1..08bf4e0 100644
+--- a/src/actions.c
++++ b/src/actions.c
+@@ -203,6 +203,22 @@ get_archive_filename_from_selector (DlgNewData *data)
+     }
+     g_object_unref (info);
+     g_object_unref (dir);
++    if ((data->original_file != NULL) && (g_file_equal (file, data->original_file))) {
++        GtkWidget *dialog;
++        dialog = _gtk_error_dialog_new (GTK_WINDOW (data->dialog),
++                        GTK_DIALOG_MODAL,
++                        NULL,
++                        _("Could not create the archive"),
++                        "%s",
++                        _("New name is the same as old one, please type other name."));
++        gtk_dialog_run (GTK_DIALOG (dialog));
++
++        gtk_widget_destroy (GTK_WIDGET (dialog));
++        g_object_unref (info);
++        g_object_unref (file);
++
++        return NULL;
++    }
+ 
+     /* if the user did not specify a valid extension use the filetype combobox current type
+      * or tar.gz if automatic is selected. */
+@@ -465,11 +481,11 @@ activate_action_save_as (GtkAction *action,
+ {
+     FrWindow   *window = callback_data;
+     DlgNewData *data;
++    GFile      *file = NULL;
+     char       *archive_name = NULL;
+ 
+     if (fr_window_get_archive_uri (window)) {
+         const char *uri;
+-        GFile      *file;
+         GFileInfo  *info;
+         GError     *err = NULL;
+ 
+@@ -487,10 +503,10 @@ activate_action_save_as (GtkAction *action,
+             archive_name = g_strdup (g_file_info_get_display_name (info));
+ 
+         g_object_unref (info);
+-        g_object_unref (file);
+     }
+ 
+     data = dlg_save_as (window, archive_name);
++    data->original_file = file;
+     g_signal_connect (G_OBJECT (data->dialog),
+               "response",
+               G_CALLBACK (save_file_response_cb),
+diff --git a/src/dlg-new.c b/src/dlg-new.c
+index 8b78561..2214574 100644
+--- a/src/dlg-new.c
++++ b/src/dlg-new.c
+@@ -42,6 +42,8 @@ static void
+ destroy_cb (GtkWidget  *widget,
+ 	    DlgNewData *data)
+ {
++	if (data->original_file != NULL)
++		g_object_unref (data->original_file);
+ 	g_free (data);
+ }
+ 
+diff --git a/src/dlg-new.h b/src/dlg-new.h
+index f4e0424..92f9194 100644
+--- a/src/dlg-new.h
++++ b/src/dlg-new.h
+@@ -36,6 +36,7 @@ typedef struct {
+ 	gboolean    can_create_volumes;
+ 	GtkBuilder *builder;
+ 
++	GFile      *original_file;
+ 	GtkWidget  *dialog;
+ 	/*GtkWidget  *n_archive_type_combo_box;*/
+ 	GtkWidget  *n_other_options_expander;
+diff --git a/src/fr-window.c b/src/fr-window.c
+index b5b5cff..e098f54 100644
+--- a/src/fr-window.c
++++ b/src/fr-window.c
+@@ -6363,8 +6363,8 @@ fr_window_archive_save_as (FrWindow   *window,
+ 				     NULL,
+ 				     window->priv->convert_data.temp_dir,
+ 				     NULL,
+-				     TRUE,
+ 				     FALSE,
++				     TRUE,
+ 				     FALSE,
+ 				     window->priv->password);
+ 	fr_process_start (window->archive->process);
+-- 
+2.39.2
+
