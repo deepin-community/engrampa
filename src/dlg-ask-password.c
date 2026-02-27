@@ -29,6 +29,8 @@
 #include "glib-utils.h"
 #include "gtk-utils.h"
 
+#define GET_LABEL(x) (GTK_LABEL (gtk_builder_get_object (builder, (x))))
+#define GET_WIDGET(x) (GTK_WIDGET (gtk_builder_get_object (builder, (x))))
 
 typedef enum {
 	FR_PASSWORD_TYPE_MAIN,
@@ -36,7 +38,6 @@ typedef enum {
 } FrPasswordType;
 
 typedef struct {
-	GtkBuilder     *builder;
 	FrWindow       *window;
 	FrPasswordType  pwd_type;
 	GtkWidget      *dialog;
@@ -49,7 +50,6 @@ static void
 destroy_cb (GtkWidget  *widget,
 	    DialogData *data)
 {
-	g_object_unref (data->builder);
 	g_free (data);
 }
 
@@ -91,28 +91,20 @@ static void
 dlg_ask_password__common (FrWindow       *window,
 			  FrPasswordType  pwd_type)
 {
+	GtkBuilder *builder;
 	DialogData *data;
-	GtkWidget  *label;
 	char       *text;
 	char       *name = NULL;
 
 	data = g_new0 (DialogData, 1);
-
-	data->builder = _gtk_builder_new_from_resource ("batch-password.ui");
-	if (data->builder == NULL) {
-		g_free (data);
-		return;
-	}
-
+	builder = gtk_builder_new_from_resource (ENGRAMPA_RESOURCE_UI_PATH G_DIR_SEPARATOR_S "batch-password.ui");
 	data->window = window;
 	data->pwd_type = pwd_type;
 
 	/* Get the widgets. */
 
-	data->dialog = _gtk_builder_get_widget (data->builder, "password_dialog");
-	data->pw_password_entry = _gtk_builder_get_widget (data->builder, "pw_password_entry");
-
-	label = _gtk_builder_get_widget (data->builder, "pw_password_label");
+	data->dialog = GET_WIDGET ("password_dialog");
+	data->pw_password_entry = GET_WIDGET ("pw_password_entry");
 
 	/* Set widgets data. */
 
@@ -122,7 +114,7 @@ dlg_ask_password__common (FrWindow       *window,
 		name = g_uri_display_basename (fr_window_get_paste_archive_uri (window));
         g_assert (name != NULL);
 	text = g_strdup_printf (_("Enter the password for the archive '%s'."), name);
-	gtk_label_set_label (GTK_LABEL (label), text);
+	gtk_label_set_label (GET_LABEL ("pw_password_label"), text);
 	g_free (text);
 
 	if (fr_window_get_password (window) != NULL)
@@ -131,15 +123,14 @@ dlg_ask_password__common (FrWindow       *window,
 
 	/* Set the signals handlers. */
 
-	g_signal_connect (G_OBJECT (data->dialog),
-			  "destroy",
-			  G_CALLBACK (destroy_cb),
-			  data);
+	gtk_builder_add_callback_symbols (builder,
+	                                  "on_password_dialog_destroy", G_CALLBACK (destroy_cb),
+	                                  "on_password_dialog_response", G_CALLBACK (ask_password__response_cb),
+	                                  NULL);
 
-	g_signal_connect (G_OBJECT (data->dialog),
-			  "response",
-			  G_CALLBACK (ask_password__response_cb),
-			  data);
+	gtk_builder_connect_signals (builder, data);
+
+	g_object_unref (builder);
 
 	/* Run dialog. */
 

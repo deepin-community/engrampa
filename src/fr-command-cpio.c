@@ -49,24 +49,26 @@ mktime_from_string (char *month,
 		    char *mday,
 		    char *year)
 {
-	static const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 	struct tm tm = {0, };
 
 	tm.tm_isdst = -1;
 
 	if (month != NULL) {
+		static const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		                                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 		int i;
-		for (i = 0; i < 12; i++)
+
+		for (i = 0; i < 12; i++) {
 			if (strcmp (months[i], month) == 0) {
 				tm.tm_mon = i;
 				break;
 			}
+		}
 	}
 	tm.tm_mday = atoi (mday);
 	if (strchr (year, ':') != NULL) {
 		char **fields = g_strsplit (year, ":", 2);
-        	if (n_fields (fields) == 2) {
+		if ((fields != NULL) && (g_strv_length (fields) == 2)) {
 	        	time_t      now;
         		struct tm  *now_tm;
 
@@ -222,7 +224,7 @@ fr_command_cpio_extract (FrCommand *comm,
 }
 
 
-const char *cpio_mime_type[] = { "application/x-cpio", NULL };
+const char *cpio_mime_type[] = { /*"application/x-cpio",*/ NULL };
 
 
 static const char **
@@ -240,8 +242,8 @@ fr_command_cpio_get_capabilities (FrCommand  *comm,
 	FrCommandCap capabilities;
 
 	capabilities = FR_COMMAND_CAN_ARCHIVE_MANY_FILES;
-	if (is_program_available (CPIO_PATH, check_command))
-		capabilities |= FR_COMMAND_CAN_READ;
+/*	if (is_program_available (CPIO_PATH, check_command))
+		capabilities |= FR_COMMAND_CAN_READ;*/
 
 	return capabilities;
 }

@@ -103,10 +103,15 @@ file_data_get_type (void)
 void
 file_data_update_content_type (FileData *fdata)
 {
-	if (fdata->dir)
+	if (fdata->dir) {
 		fdata->content_type = MIME_TYPE_DIRECTORY;
-	else
-		fdata->content_type = get_static_string (g_content_type_guess (fdata->full_path, NULL, 0, NULL));
+	} else {
+		char *content_type;
+
+		content_type = g_content_type_guess (fdata->full_path, NULL, 0, NULL);
+		fdata->content_type = get_static_string (content_type);
+		g_free (content_type);
+	}
 }
 
 
@@ -147,9 +152,9 @@ int
 find_path_in_file_data_array (GPtrArray  *array,
 			      const char *path)
 {
-	int       path_l;
-	int       left, right, p, cmp = -1;
-	FileData *fd;
+	int path_l;
+	int left;
+	int right;
 
 	if (path == NULL)
 		return -1;
@@ -158,16 +163,23 @@ find_path_in_file_data_array (GPtrArray  *array,
 	left = 0;
 	right = array->len;
 	while (left < right) {
+		FileData *fd;
+		int p;
+		int cmp;
+
 		p = left + ((right - left) / 2);
 		fd = (FileData *) g_ptr_array_index (array, p);
-
 		cmp = strcmp (path, fd->original_path);
 		if (cmp != 0) {
 			/* consider '/path/to/dir' and '/path/to/dir/' the same path */
+			int original_path_l;
 
-			int original_path_l = strlen (fd->original_path);
+			original_path_l = strlen (fd->original_path);
+
 			if ((path_l == original_path_l - 1) && (fd->original_path[original_path_l - 1] == '/')) {
-				int cmp2 = strncmp (path, fd->original_path, original_path_l - 1);
+				int cmp2;
+
+				cmp2  = strncmp (path, fd->original_path, original_path_l - 1);
 				if (cmp2 == 0)
 					cmp = cmp2;
 			}

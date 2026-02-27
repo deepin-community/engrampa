@@ -125,13 +125,13 @@ get_packages_real_names (char **names)
 {
 	char     **real_names;
 	GKeyFile  *key_file;
-	char      *filename;
 	int        i;
 
 	real_names = g_new0 (char *, g_strv_length (names));
 	key_file = g_key_file_new ();
-	filename = g_build_filename (PRIVDATADIR, "packages.match", NULL);
-	g_key_file_load_from_file (key_file, filename, G_KEY_FILE_NONE, NULL);
+	g_key_file_load_from_file (key_file,
+	                           PRIVDATADIR "/packages.match",
+	                           G_KEY_FILE_NONE, NULL);
 
 	for (i = 0; names[i] != NULL; i++) {
 		char *real_name;
@@ -147,7 +147,6 @@ get_packages_real_names (char **names)
 		real_name = NULL;
 	}
 
-	g_free (filename);
 	g_key_file_free (key_file);
 
 	return real_names;
@@ -306,9 +305,11 @@ dlg_package_installer (FrWindow  *window,
 	{
 		char      *secondary_text;
 		GtkWidget *dialog;
+		char      *description;
 
+		description = g_content_type_get_description (idata->archive->content_type);
 		secondary_text = g_strdup_printf (_("There is no command installed for %s files.\nDo you want to search for a command to open this file?"),
-						  g_content_type_get_description (idata->archive->content_type));
+		                                  description);
 		dialog = _gtk_message_dialog_new (GTK_WINDOW (idata->window),
 						  GTK_DIALOG_MODAL,
 						  "dialog-error",
@@ -329,6 +330,7 @@ dlg_package_installer (FrWindow  *window,
 		g_signal_connect (dialog, "response", G_CALLBACK (confirm_search_dialog_response_cb), idata);
 		gtk_widget_show (dialog);
 
+		g_free (description);
 		g_free (secondary_text);
 	}
 

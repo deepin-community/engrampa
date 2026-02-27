@@ -43,7 +43,6 @@
 #include "fr-list-model.h"
 #include "fr-archive.h"
 #include "fr-error.h"
-#include "fr-stock.h"
 #include "fr-window.h"
 #include "file-data.h"
 #include "file-utils.h"
@@ -61,10 +60,8 @@
 #endif
 
 #define LAST_OUTPUT_DIALOG_NAME "last-output"
-#define MAX_HISTORY_LEN 5
 #define ACTIVITY_DELAY 100
 #define ACTIVITY_PULSE_STEP (0.033)
-#define MAX_MESSAGE_LENGTH 50
 
 #define PROGRESS_TIMEOUT_MSECS 5000
 #define PROGRESS_DIALOG_DEFAULT_WIDTH 500
@@ -74,28 +71,19 @@
 #define HIDE_PROGRESS_TIMEOUT_MSECS 500
 #define DEFAULT_NAME_COLUMN_WIDTH 250
 #define OTHER_COLUMNS_WIDTH 100
-#define RECENT_ITEM_MAX_WIDTH 25
-
-#define DEF_WIN_WIDTH 600
-#define DEF_WIN_HEIGHT 480
-#define DEF_SIDEBAR_WIDTH 200
 
 #define FILE_LIST_ICON_SIZE GTK_ICON_SIZE_LARGE_TOOLBAR
-#define DIR_TREE_ICON_SIZE GTK_ICON_SIZE_MENU
 
 #define BAD_CHARS "/\\*"
 
-static GHashTable     *pixbuf_hash = NULL;
 static GHashTable     *tree_pixbuf_hash = NULL;
 static GtkIconTheme   *icon_theme = NULL;
 static int             file_list_icon_size = 0;
-static int             dir_tree_icon_size = 0;
 
 #define XDS_FILENAME "xds.txt"
 #define MAX_XDS_ATOM_VAL_LEN 4096
 #define XDS_ATOM   gdk_atom_intern  ("XdndDirectSave0", FALSE)
 #define TEXT_ATOM  gdk_atom_intern  ("text/plain", FALSE)
-#define OCTET_ATOM gdk_atom_intern  ("application/octet-stream", FALSE)
 #define XFR_ATOM   gdk_atom_intern  ("XdndEngrampa0", FALSE)
 
 #define FR_CLIPBOARD (gdk_atom_intern_static_string ("_RNGRAMPA_SPECIAL_CLIPBOARD"))
@@ -572,6 +560,7 @@ fr_window_free_private_data (FrWindow *window)
 	g_free (window->priv->add_default_dir);
 	g_free (window->priv->extract_default_dir);
 	g_free (window->priv->archive_uri);
+	g_free (window->priv->working_archive);
 
 	g_free (window->priv->password);
 	g_free (window->priv->password_for_paste);
@@ -656,13 +645,6 @@ fr_window_finalize (GObject *object)
 	}
 
 	if (gtk_application_get_windows (GTK_APPLICATION (g_application_get_default ())) == NULL) {
-		if (pixbuf_hash != NULL) {
-			g_hash_table_foreach (pixbuf_hash,
-					      gh_unref_pixbuf,
-					      NULL);
-			g_hash_table_destroy (pixbuf_hash);
-			pixbuf_hash = NULL;
-		}
 		if (tree_pixbuf_hash != NULL) {
 			g_hash_table_foreach (tree_pixbuf_hash,
 					      gh_unref_pixbuf,
@@ -1000,7 +982,7 @@ sort_by_type (gconstpointer  ptr1,
 	FileData    *fdata1 = *((FileData **) ptr1);
 	FileData    *fdata2 = *((FileData **) ptr2);
 	int          result;
-	const char  *desc1, *desc2;
+	char        *desc1, *desc2;
 
 	if (file_data_is_dir (fdata1) != file_data_is_dir (fdata2)) {
 		if (file_data_is_dir (fdata1))
@@ -1015,6 +997,9 @@ sort_by_type (gconstpointer  ptr1,
 	desc2 = g_content_type_get_description (fdata2->content_type);
 
 	result = strcasecmp (desc1, desc2);
+	g_free (desc1);
+	g_free (desc2);
+
 	if (result == 0)
 		return sort_by_name (ptr1, ptr2);
 	else
@@ -1308,71 +1293,26 @@ get_mime_type_icon (const char *mime_type)
 
 
 static GdkPixbuf *
-get_icon (GtkWidget *widget,
-	  FileData  *fdata)
+get_icon (FileData  *fdata)
 {
-	GdkPixbuf  *pixbuf = NULL;
 	const char *content_type;
-	GIcon      *icon;
 
 	if (file_data_is_dir (fdata))
 		content_type = MIME_TYPE_DIRECTORY;
 	else
 		content_type = fdata->content_type;
 
-	/* look in the hash table. */
-
-	pixbuf = g_hash_table_lookup (pixbuf_hash, content_type);
-	if (pixbuf != NULL) {
-		g_object_ref (G_OBJECT (pixbuf));
-		return pixbuf;
-	}
-
-	icon = g_content_type_get_icon (content_type);
-	pixbuf = get_icon_pixbuf (icon, file_list_icon_size, icon_theme);
-	g_object_unref (icon);
-
-	if (pixbuf == NULL)
-		return NULL;
-
-	pixbuf = gdk_pixbuf_copy (pixbuf);
-	g_hash_table_insert (pixbuf_hash, (gpointer) content_type, pixbuf);
-	g_object_ref (G_OBJECT (pixbuf));
-
-	return pixbuf;
+	return get_mime_type_icon (content_type);
 }
 
 
 static GdkPixbuf *
-get_emblem (GtkWidget *widget,
-	    FileData  *fdata)
+get_emblem (FileData  *fdata)
 {
-	GdkPixbuf *pixbuf = NULL;
-
 	if (! fdata->encrypted)
 		return NULL;
 
-	/* encrypted */
-
-	pixbuf = g_hash_table_lookup (pixbuf_hash, "emblem-nowrite");
-	if (pixbuf != NULL) {
-		g_object_ref (G_OBJECT (pixbuf));
-		return pixbuf;
-	}
-
-	pixbuf = gtk_icon_theme_load_icon (icon_theme,
-					   "emblem-nowrite",
-					   file_list_icon_size,
-					   0,
-					   NULL);
-	if (pixbuf == NULL)
-		return NULL;
-
-	pixbuf = gdk_pixbuf_copy (pixbuf);
-	g_hash_table_insert (pixbuf_hash, (gpointer) "emblem-nowrite", pixbuf);
-	g_object_ref (G_OBJECT (pixbuf));
-
-	return pixbuf;
+	return get_mime_type_icon ("emblem-nowrite");
 }
 
 
@@ -1482,8 +1422,10 @@ fr_window_update_statusbar_list_info (FrWindow *window)
 {
 	char    *info, *archive_info, *selected_info;
 	char    *size_txt, *sel_size_txt;
-	int      tot_n, sel_n;
-	goffset  tot_size, sel_size;
+	gulong   tot_n = 0;
+	gulong   sel_n = 0;
+	goffset  tot_size = 0;
+	goffset  sel_size = 0;
 	GList   *scan;
 
 	if (window == NULL)
@@ -1493,9 +1435,6 @@ fr_window_update_statusbar_list_info (FrWindow *window)
 		gtk_statusbar_pop (GTK_STATUSBAR (window->priv->statusbar), window->priv->list_info_cid);
 		return;
 	}
-
-	tot_n = 0;
-	tot_size = 0;
 
 	if (window->priv->archive_present) {
 		GPtrArray *files = fr_window_get_current_dir_list (window);
@@ -1512,9 +1451,6 @@ fr_window_update_statusbar_list_info (FrWindow *window)
 		}
 		g_ptr_array_free (files, TRUE);
 	}
-
-	sel_n = 0;
-	sel_size = 0;
 
 	if (window->priv->archive_present) {
 		GList *selection = get_selection_as_fd (window);
@@ -1535,12 +1471,12 @@ fr_window_update_statusbar_list_info (FrWindow *window)
 	if (tot_n == 0)
 		archive_info = g_strdup ("");
 	else
-		archive_info = g_strdup_printf (ngettext ("%d object (%s)", "%d objects (%s)", tot_n), tot_n, size_txt);
+		archive_info = g_strdup_printf (g_dngettext (GETTEXT_PACKAGE, "%lu object (%s)", "%lu objects (%s)", tot_n), tot_n, size_txt);
 
 	if (sel_n == 0)
 		selected_info = g_strdup ("");
 	else
-		selected_info = g_strdup_printf (ngettext ("%d object selected (%s)", "%d objects selected (%s)", sel_n), sel_n, sel_size_txt);
+		selected_info = g_strdup_printf (g_dngettext (GETTEXT_PACKAGE, "%lu object selected (%s)", "%lu objects selected (%s)", sel_n), sel_n, sel_size_txt);
 
 	info = g_strconcat (archive_info,
 			    ((sel_n == 0) ? NULL : ", "),
@@ -1580,9 +1516,9 @@ fr_window_populate_file_list (FrWindow  *window,
 
 		gtk_list_store_append (window->priv->list_store, &iter);
 
-		icon = get_icon (GTK_WIDGET (window), fdata);
+		icon = get_icon (fdata);
 		utf8_name = g_filename_display_name (fdata->list_name);
-		emblem = get_emblem (GTK_WIDGET (window), fdata);
+		emblem = get_emblem (fdata);
 
 		if (file_data_is_dir (fdata)) {
 			char *utf8_path;
@@ -1628,7 +1564,7 @@ fr_window_populate_file_list (FrWindow  *window,
 			char       *utf8_path;
 			char       *s_size;
 			char       *s_time;
-			const char *desc;
+			char       *desc;
 
 			utf8_path = g_filename_display_name (fdata->path);
 
@@ -1651,6 +1587,7 @@ fr_window_populate_file_list (FrWindow  *window,
 			g_free (utf8_path);
 			g_free (s_size);
 			g_free (s_time);
+			g_free (desc);
 		}
 		g_free (utf8_name);
 		if (icon != NULL)
@@ -2325,16 +2262,13 @@ static void change_button_label (FrWindow  *window,
 								    GTK_ICON_SIZE_BUTTON));
 	}
 }
-static void fr_state_switch (FrWindow  *window)
+
+static void
+fr_state_switch (FrWindow  *window)
 {
-	int ret;
-	if (window->archive->process != NULL)
-	{
-		ret = start_switch_state (window->archive->process);
-		if (ret == 0)
-		{
-			change_button_label (window, window->priv->pd_state_button);
-		}
+	if ((window->archive->process != NULL) &&
+	    ((start_switch_state (window->archive->process) == 0))) {
+		change_button_label (window, window->priv->pd_state_button);
 	}
 }
 
@@ -2485,9 +2419,10 @@ fr_window_working_archive_cb (FrCommand  *command,
 			      FrWindow   *window)
 {
 	g_free (window->priv->working_archive);
-	window->priv->working_archive = NULL;
 	if (archive_filename != NULL)
 		window->priv->working_archive = g_strdup (archive_filename);
+	else
+		window->priv->working_archive = NULL;
 	progress_dialog_update_action_description (window);
 
 	return TRUE;
@@ -2777,17 +2712,19 @@ fr_window_progress_cb (FrArchive *archive,
 
 		if ((archive != NULL) && (archive->command != NULL) && (archive->command->n_files > 0)) {
 			char *message = NULL;
-			int   remaining_files;
+			gulong remaining_files;
 
-			remaining_files = archive->command->n_files - archive->command->n_file + 1;
+			remaining_files = (gulong) (archive->command->n_files - archive->command->n_file + 1);
 
 			switch (window->priv->action) {
 			case FR_ACTION_ADDING_FILES:
 			case FR_ACTION_EXTRACTING_FILES:
 			case FR_ACTION_DELETING_FILES:
-				message = g_strdup_printf (ngettext ("%d file remaining",
-								     "%d files remaining",
-								     remaining_files), remaining_files);
+				message = g_strdup_printf (g_dngettext (GETTEXT_PACKAGE,
+				                                        "%lu file remaining",
+				                                        "%lu files remaining",
+			                                                remaining_files),
+				                           remaining_files);
 				break;
 			default:
 				break;
@@ -2944,6 +2881,7 @@ fr_window_add_to_recent_list (FrWindow *window,
 		recent_data->app_exec = "engrampa";
 		gtk_recent_manager_add_full (gtk_recent_manager_get_default (), uri, recent_data);
 
+		g_free (recent_data->mime_type);
 		g_free (recent_data);
 	}
 	else
@@ -3645,7 +3583,7 @@ fr_window_get_file_list (FrWindow *window)
 int
 fr_window_get_n_selected_files (FrWindow *window)
 {
-	return _gtk_count_selected (gtk_tree_view_get_selection (GTK_TREE_VIEW (window->priv->list_view)));
+	return gtk_tree_selection_count_selected_rows (gtk_tree_view_get_selection (GTK_TREE_VIEW (window->priv->list_view)));
 }
 
 
@@ -4372,7 +4310,7 @@ get_xds_atom_value (GdkDragContext *context)
 {
 	gint actual_length;
 	char *data;
-	char *ret;
+	char *ret = NULL;
 
 	g_return_val_if_fail (context != NULL, NULL);
 	g_return_val_if_fail (gdk_drag_context_get_source_window (context) != NULL, NULL);
@@ -4385,10 +4323,9 @@ get_xds_atom_value (GdkDragContext *context)
 		/* add not included \0 to the end of the string */
 		ret = g_strndup ((gchar *) data, actual_length);
 		g_free (data);
-		return ret;
 	}
 
-	return NULL;
+	return ret;
 }
 
 
@@ -4775,10 +4712,11 @@ fr_window_delete_event_cb (GtkWidget *caller,
 static gboolean
 is_single_click_policy (FrWindow *window)
 {
-	char     *value;
 	gboolean  result = FALSE;
 
 	if (window->priv->settings_caja) {
+		char *value;
+
 		value = g_settings_get_string (window->priv->settings_caja, CAJA_CLICK_POLICY);
 		result = (value != NULL) && (strncmp (value, "single", 6) == 0);
 		g_free (value);
@@ -4796,7 +4734,6 @@ filename_cell_data_func (GtkTreeViewColumn *column,
 			 FrWindow          *window)
 {
 	char           *text;
-	GtkTreePath    *path;
 	PangoUnderline  underline;
 
 	gtk_tree_model_get (model, iter,
@@ -4804,6 +4741,8 @@ filename_cell_data_func (GtkTreeViewColumn *column,
 			    -1);
 
 	if (window->priv->single_click) {
+		GtkTreePath *path;
+
 		path = gtk_tree_model_get_path (model, iter);
 
 		if ((window->priv->list_hover_path == NULL)
@@ -5178,13 +5117,6 @@ pref_use_mime_icons_changed (GSettings *settings,
 {
 	FrWindow *window = user_data;
 
-	if (pixbuf_hash != NULL) {
-		g_hash_table_foreach (pixbuf_hash,
-				      gh_unref_pixbuf,
-				      NULL);
-		g_hash_table_destroy (pixbuf_hash);
-		pixbuf_hash = g_hash_table_new (g_str_hash, g_str_equal);
-	}
 	if (tree_pixbuf_hash != NULL) {
 		g_hash_table_foreach (tree_pixbuf_hash,
 				      gh_unref_pixbuf,
@@ -5202,15 +5134,7 @@ static void
 theme_changed_cb (GtkIconTheme *theme, FrWindow *window)
 {
 	file_list_icon_size = _gtk_widget_lookup_for_size (GTK_WIDGET (window), FILE_LIST_ICON_SIZE);
-	dir_tree_icon_size = _gtk_widget_lookup_for_size (GTK_WIDGET (window), DIR_TREE_ICON_SIZE);
 
-	if (pixbuf_hash != NULL) {
-		g_hash_table_foreach (pixbuf_hash,
-				      gh_unref_pixbuf,
-				      NULL);
-		g_hash_table_destroy (pixbuf_hash);
-		pixbuf_hash = g_hash_table_new (g_str_hash, g_str_equal);
-	}
 	if (tree_pixbuf_hash != NULL) {
 		g_hash_table_foreach (tree_pixbuf_hash,
 				      gh_unref_pixbuf,
@@ -5547,8 +5471,6 @@ fr_window_construct (FrWindow *window)
 
 	/* data common to all windows. */
 
-	if (pixbuf_hash == NULL)
-		pixbuf_hash = g_hash_table_new (g_str_hash, g_str_equal);
 	if (tree_pixbuf_hash == NULL)
 		tree_pixbuf_hash = g_hash_table_new (g_str_hash, g_str_equal);
 
@@ -5594,7 +5516,6 @@ fr_window_construct (FrWindow *window)
 				  window);
 
 	file_list_icon_size = _gtk_widget_lookup_for_size (GTK_WIDGET (window), FILE_LIST_ICON_SIZE);
-	dir_tree_icon_size = _gtk_widget_lookup_for_size (GTK_WIDGET (window), DIR_TREE_ICON_SIZE);
 
 	gtk_window_set_default_size (GTK_WINDOW (window),
 				g_settings_get_int (window->priv->settings_ui, PREF_UI_WINDOW_WIDTH),
@@ -6442,8 +6363,8 @@ fr_window_archive_save_as (FrWindow   *window,
 				     NULL,
 				     window->priv->convert_data.temp_dir,
 				     NULL,
-				     TRUE,
 				     FALSE,
+				     TRUE,
 				     FALSE,
 				     window->priv->password);
 	fr_process_start (window->archive->process);
