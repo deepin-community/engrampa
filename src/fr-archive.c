@@ -162,8 +162,6 @@ xfer_data_free (XferData *data)
 
 
 #define MAX_CHUNK_LEN (NCARGS * 2 / 3) /* Max command line length */
-#define UNKNOWN_TYPE "application/octet-stream"
-#define SAME_FS (FALSE)
 #define NO_BACKUP_FILES (TRUE)
 #define NO_DOT_FILES (FALSE)
 #define IGNORE_CASE (FALSE)
@@ -1917,7 +1915,6 @@ copy_remote_files (FrArchive     *archive,
 	xfer_data->base_uri = g_strdup (base_uri);
 	xfer_data->dest_dir = g_strdup (dest_dir);
 	xfer_data->update = update;
-	xfer_data->dest_dir = g_strdup (dest_dir);
 	xfer_data->password = g_strdup (password);
 	xfer_data->encrypt_header = encrypt_header;
 	xfer_data->compression = compression;
@@ -3338,10 +3335,11 @@ get_extract_here_destination (GFile   *file,
 	char  *desired_destination;
 	char  *destination = NULL;
 	int    n = 1;
-	GFile *directory;
 
 	desired_destination = get_desired_destination_for_archive (file);
 	do {
+		GFile *directory;
+
 		*error = NULL;
 
 		g_free (destination);

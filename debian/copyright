@@ -49,7 +49,6 @@ Files: src/dlg-add-files.h
        src/fr-command-zoo.h
        src/fr-command.c
        src/fr-command.h
-       src/fr-init.c
        src/fr-init.h
        src/fr-proc-error.c
        src/fr-proc-error.h
@@ -59,11 +58,19 @@ Files: src/dlg-add-files.h
        src/open-file.c
        src/open-file.h
        src/rar-utils.c
-       src/rar-utils.h
-       src/server.c
        src/test-server.c
        src/typedefs.h
-Copyright: 2001-2012, The Free Software Foundation, Inc.
+Copyright: 2001, The Free Software Foundation, Inc.
+           2001-2006, The Free Software Foundation, Inc.
+           2001-2008, The Free Software Foundation, Inc.
+           2001-2009, The Free Software Foundation, Inc.
+           2003, The Free Software Foundation, Inc.
+           2004, The Free Software Foundation, Inc.
+           2006, The Free Software Foundation, Inc.
+           2008, The Free Software Foundation, Inc.
+           2010, The Free Software Foundation, Inc.
+           2011, The Free Software Foundation, Inc.
+           2012, The Free Software Foundation, Inc.
 License: GPL-2+
 
 Files: caja/caja-engrampa.c
@@ -91,16 +98,17 @@ Files: caja/caja-engrampa.c
        src/fr-command-ar.h
        src/fr-command-arj.c
        src/fr-command-arj.h
+       src/fr-command-nomarch.c
+       src/fr-command-nomarch.h
        src/fr-command-tar.c
        src/fr-command-zoo.c
        src/fr-error.c
        src/fr-error.h
+       src/fr-init.c
        src/fr-list-model.c
        src/fr-list-model.h
        src/fr-process.c
        src/fr-process.h
-       src/fr-stock.c
-       src/fr-stock.h
        src/fr-window.c
        src/fr-window.h
        src/gio-utils.c
@@ -111,25 +119,34 @@ Files: caja/caja-engrampa.c
        src/main.c
        src/preferences.c
        src/preferences.h
+       src/rar-utils.h
+       src/server.c
        src/ui.h
-Copyright: 2001-2008, Free Software Foundation, Inc.
+Copyright: 2001, 2003, 2005, Free Software Foundation, Inc.
+           2001, 2003, 2007-2008, Free Software Foundation, Inc.
+           2001, 2003, 2008, Free Software Foundation, Inc.
+           2001, 2003, Free Software Foundation, Inc.
+           2001, 2003-2004, Free Software Foundation, Inc.
+           2001, 2003-2005, Free Software Foundation, Inc.
+           2001, 2004, Free Software Foundation, Inc.
+           2003, Free Software Foundation, Inc.
+           2004, 2008, Free Software Foundation, Inc.
+           2004, Free Software Foundation, Inc.
+           2005, Free Software Foundation, Inc.
+           2007, Free Software Foundation, Inc.
+           2008, Free Software Foundation, Inc.
+           2010, Free Software Foundation, Inc.
+           2011, Free Software Foundation, Inc.
 License: GPL-2+
 
-Files: copy-n-paste/eggdesktopfile.h
-       copy-n-paste/eggsmclient-private.h
-       copy-n-paste/eggsmclient.c
-       copy-n-paste/eggsmclient.h
-Copyright: 2007, Novell, Inc.
-License: LGPL-2+
-
-Files: .build.yml
+Files: .gitmodules
+       .build.yml
        .tx/config
        .travis.yml
        .github/issue_template.md
        .github/FUNDING.yml
        caja/libcaja-engrampa.caja-extension.desktop.in.in
        caja/Makefile.am
-       copy-n-paste/Makefile.am
        data/icons/22x22/apps/*.png
        data/icons/16x16/actions/*.png
        data/icons/16x16/apps/*.png
@@ -139,6 +156,7 @@ Files: .build.yml
        data/icons/24x24/actions/*.png
        data/icons/24x24/apps/*.png
        data/Makefile.am
+       data/update-packages-match
        data/*.in
        data/packages.match
        po/LINGUAS
@@ -178,21 +196,9 @@ Files: src/eggfileformatchooser.c
 Copyright: 2007, Mathias Hasselmann
 License: LGPL-2+
 
-Files: copy-n-paste/eggsmclient-xsmp.c
-Copyright: 1998, Carsten Schaar
-           1998, The Open Group
-           2007, Novell, Inc.
-License: LGPL-2+
-
 Files: src/eggtreemultidnd.c
 Copyright: 2001, Red Hat, Inc.
            2005, Free Software Foundation, Inc.
-License: LGPL-2+
-
-Files: copy-n-paste/eggdesktopfile.c
-Copyright: 1999-2000, Red Hat Inc.
-           2001, George Lebl
-           2007, Novell, Inc.
 License: LGPL-2+
 
 Files: src/eggtreemultidnd.h
@@ -265,9 +271,14 @@ Copyright: Carles Ferrando Garcia <carles.ferrando@gmail.com>
            Simos Xenitellis <simos@gnome.org>
 License: GFDL-1.1+
 
+Files: git.mk
+Copyright: 2009, Red Hat, Inc.
+  2010,2011,2012,2013, Behdad Esfahbod
+License: public-domain
+
 Files: debian/*
 Copyright: 2011-2014, Stefano Karapetsas <stefano@karapetsas.com>
-           2014, Mike Gabriel <sunweaver@debian.org>
+           2014-2024, Mike Gabriel <sunweaver@debian.org>
 License: GPL-2+ or LGPL-2+
 
 License: GPL-2+
@@ -314,3 +325,8 @@ License: GFDL-1.1+
  .
  On Debian systems, the complete text of the GNU Free Documentation License
  version 1.2 can be found in "/usr/share/common-licenses/GFDL-1.2".
+
+License: public-domain
+ Copying and distribution of this file, with or without modification,
+ is permitted in any medium without royalty provided the copyright
+ notice and this notice are preserved.

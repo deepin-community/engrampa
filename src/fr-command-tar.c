@@ -40,7 +40,6 @@
 #include "fr-command.h"
 #include "fr-command-tar.h"
 
-#define ACTIVITY_DELAY 20
 #define LSTAR_DATE_FORMAT "%Y-%m-%d %H:%M"
 
 static void fr_command_tar_class_init  (FrCommandTarClass *class);
@@ -141,8 +140,11 @@ process_line (char     *line,
 	}
 	g_free (name);
 	name = g_filename_from_utf8 (fdata->original_path, -1, NULL, NULL, NULL);
-	if (name)
-		fdata->original_path = name;
+	if (name) {
+		fdata->original_path = g_strdup (name);
+		fdata->free_original_path = TRUE;
+	}
+	g_free (name);
 
 	if (fields[1] != NULL)
 		fdata->link = g_strdup (fields[1]);
@@ -835,9 +837,6 @@ get_uncompressed_name (FrCommandTar *c_tar,
 
 	return new_name;
 }
-
-
-#define MAX_TRIES 50
 
 
 static char *

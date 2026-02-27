@@ -36,6 +36,7 @@
 #include "fr-command-iso.h"
 #include "fr-command-jar.h"
 #include "fr-command-lha.h"
+#include "fr-command-nomarch.h"
 #include "fr-command-rar.h"
 #include "fr-command-rpm.h"
 #include "fr-command-tar.h"
@@ -49,7 +50,6 @@
 #include "fr-command-lrzip.h"
 #include "fr-init.h"
 #include "fr-process.h"
-#include "fr-stock.h"
 #include "fr-window.h"
 #include "typedefs.h"
 #include "preferences.h"
@@ -66,10 +66,12 @@ FrMimeTypeDescription mime_type_desc[] = {
 	{ "application/vnd.oasis.opendocument.presentation-template", ".otp",      N_("OpenDocument Presentation Template"), 0 },
 	{ "application/vnd.oasis.opendocument.spreadsheet-template",  ".ots",      N_("OpenDocument Spreadsheet Template"), 0 },
 	{ "application/vnd.oasis.opendocument.text-template",         ".ott",      N_("OpenDocument Text Template"), 0 },
+	{ "application/epub+zip",                                     ".epub",     N_("Electronic Publication"), 0 },
 	{ "application/x-7z-compressed",                              ".7z",       N_("7-Zip"), 0 },
 	{ "application/x-7z-compressed-tar",                          ".tar.7z",   N_("Tar compressed with 7z"), 0 },
 	{ "application/x-ace",                                        ".ace",      N_("Ace"), 0 },
 	{ "application/x-alz",                                        ".alz",      N_("ALZip archive"), 0 },
+	{ "application/x-arc",                                        ".arc",	   N_("ARC archive"), 0 },
 	{ "application/x-archive",                                    ".ar",       N_("Ar"), 0 },
 	{ "application/x-arj",                                        ".arj",      N_("Arj"), 0 },
 	{ "application/x-brotli",                                     ".br",       N_("Brotli compressed file"), 0 },
@@ -120,6 +122,7 @@ FrExtensionType file_ext_type[] = {
 	{ ".ace", "application/x-ace" },
 	{ ".alz", "application/x-alz" },
 	{ ".ar", "application/x-archive" },
+	{ ".arc", "application/x-arc" },
 	{ ".arj", "application/x-arj" },
 	{ ".bin", "application/x-stuffit" },
 	{ ".br", "application/x-brotli" },
@@ -131,6 +134,7 @@ FrExtensionType file_ext_type[] = {
 	{ ".cpio", "application/x-cpio" },
 	{ ".deb", "application/vnd.debian.binary-package" },
 	{ ".ear", "application/x-ear" },
+	{ ".epub", "application/epub+zip" },
 	{ ".exe", "application/x-ms-dos-executable" },
 	{ ".gz", "application/x-gzip" },
 	{ ".iso", "application/x-cd-image" },
@@ -370,6 +374,7 @@ register_commands (void)
 	register_command (FR_TYPE_COMMAND_ACE);
 	register_command (FR_TYPE_COMMAND_ALZ);
 	register_command (FR_TYPE_COMMAND_AR);
+	register_command (FR_TYPE_COMMAND_NOMARCH);
 	register_command (FR_TYPE_COMMAND_ARJ);
 	register_command (FR_TYPE_COMMAND_CPIO);
 	register_command (FR_TYPE_COMMAND_ISO);
@@ -650,8 +655,6 @@ initialize_data (void)
 	migrate_options_directory ();
 	register_commands ();
 	compute_supported_archive_types ();
-
-	fr_stock_init ();
 }
 
 

@@ -242,7 +242,7 @@ fr_command_unarchiver_handle_error (FrCommand   *comm,
 			char *line = scan->data;
 
 			if ((strstr (line, "This archive requires a password to unpack.") != NULL)  ||
-			    (strstr (line, "Failed! (Missing or wrong password)") != NULL)) { 
+			    (strstr (line, "Failed! (Missing or wrong password)") != NULL)) {
 
 				error->type = FR_PROC_ERROR_ASK_PASSWORD;
 				break;
@@ -255,6 +255,7 @@ fr_command_unarchiver_handle_error (FrCommand   *comm,
 const char *unarchiver_mime_type[] = { "application/zip",
 				       "application/x-cbr",
 				       "application/x-rar",
+				       "application/x-cpio",
 				       NULL };
 
 

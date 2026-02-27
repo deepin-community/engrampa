@@ -26,30 +26,6 @@
 #include <gtk/gtk.h>
 #include "gtk-utils.h"
 
-#define LOAD_BUFFER_SIZE 65536
-
-static void
-count_selected (GtkTreeModel *model,
-		GtkTreePath  *path,
-		GtkTreeIter  *iter,
-		gpointer      data)
-{
-	int *n = data;
-	*n = *n + 1;
-}
-
-
-int
-_gtk_count_selected (GtkTreeSelection *selection)
-{
-	int n = 0;
-
-	if (selection == NULL)
-		return 0;
-	gtk_tree_selection_selected_foreach (selection, count_selected, &n);
-	return n;
-}
-
 
 GtkWidget*
 _gtk_message_dialog_new (GtkWindow        *parent,
@@ -278,11 +254,9 @@ _gtk_error_dialog_new (GtkWindow        *parent,
 	GtkWidget     *expander;
 	GtkWidget     *content_area;
 	GtkWidget     *action_area;
-	GtkTextBuffer *text_buf;
 	GtkTextIter    iter;
 	GList         *scan;
 	char          *escaped_message, *markup_text;
-	va_list        args;
 	gboolean       view_output = (row_output != NULL);
 
 	dialog = gtk_dialog_new_with_buttons ("",
@@ -311,6 +285,7 @@ _gtk_error_dialog_new (GtkWindow        *parent,
 
 	escaped_message = g_markup_escape_text (primary_text, -1);
 	if (secondary_text != NULL) {
+		va_list args;
 		char *secondary_message;
 		char *escaped_secondary_message;
 
@@ -333,6 +308,8 @@ _gtk_error_dialog_new (GtkWindow        *parent,
 	g_free (escaped_message);
 
 	if (view_output) {
+		GtkTextBuffer *text_buf;
+
 		gtk_widget_set_size_request (dialog, 500, -1);
 
 		/* Expander */
@@ -595,32 +572,6 @@ show_help_dialog (GtkWindow  *parent,
 	g_free (uri);
 }
 
-
-GtkBuilder *
-_gtk_builder_new_from_resource (const char *resource_path)
-{
-	GtkBuilder *builder;
-	char       *full_path;
-	GError     *error = NULL;
-
-	builder = gtk_builder_new ();
-	full_path = g_strconcat (ENGRAMPA_RESOURCE_UI_PATH G_DIR_SEPARATOR_S, resource_path, NULL);
-        if (! gtk_builder_add_from_resource (builder, full_path, &error)) {
-                g_warning ("%s\n", error->message);
-                g_clear_error (&error);
-        }
-	g_free (full_path);
-
-        return builder;
-}
-
-
-GtkWidget *
-_gtk_builder_get_widget (GtkBuilder *builder,
-			 const char *name)
-{
-	return (GtkWidget *) gtk_builder_get_object (builder, name);
-}
 
 int
 _gtk_widget_lookup_for_size (GtkWidget *widget,
