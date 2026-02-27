@@ -49,24 +49,26 @@ mktime_from_string (char *month,
 		    char *mday,
 		    char *year)
 {
-	static const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 	struct tm tm = {0, };
 
 	tm.tm_isdst = -1;
 
 	if (month != NULL) {
+		static const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		                                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 		int i;
-		for (i = 0; i < 12; i++)
+
+		for (i = 0; i < 12; i++) {
 			if (strcmp (months[i], month) == 0) {
 				tm.tm_mon = i;
 				break;
 			}
+		}
 	}
 	tm.tm_mday = atoi (mday);
 	if (strchr (year, ':') != NULL) {
 		char **fields = g_strsplit (year, ":", 2);
-        	if (n_fields (fields) == 2) {
+		if ((fields != NULL) && (g_strv_length (fields) == 2)) {
 	        	time_t      now;
         		struct tm  *now_tm;
 

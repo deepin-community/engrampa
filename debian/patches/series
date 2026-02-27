@@ -1,0 +1,6 @@
+0001_dlg-package-installer-fix-memory-leak.patch
+0002_fr-window-fix-memory-leak.patch
+0003_file-data-fix-memory-leak.patch
+0004_Fix-archive-file-save-as-function.patch
+0005_fr-process-fix-memory-leak.patch
+0006_use-unar-instead-of-cpio-for-CPIO-archives.patch

@@ -27,7 +27,6 @@
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 
-int         _gtk_count_selected             (GtkTreeSelection *selection);
 GtkWidget*  _gtk_message_dialog_new         (GtkWindow        *parent,
 					     GtkDialogFlags    flags,
 					     const char       *icon_name,
@@ -66,11 +65,6 @@ GdkPixbuf * get_mime_type_pixbuf            (const char   *mime_type,
 		                             GtkIconTheme *icon_theme);
 void        show_help_dialog                (GtkWindow    *parent,
 					     const char   *section);
-GtkBuilder *
-	   _gtk_builder_new_from_resource   (const char   *resource_path);
-GtkWidget *
-	    _gtk_builder_get_widget         (GtkBuilder   *builder,
-			 		     const char   *name);
 
 int	    _gtk_widget_lookup_for_size	    (GtkWidget *widget,
 					     GtkIconSize icon_size);

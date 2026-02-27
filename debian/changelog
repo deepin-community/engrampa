@@ -1,8 +1,43 @@
-engrampa (1.24.1-deepin1) unstable; urgency=medium
+engrampa (1.26.0-1+deb12u2) bookworm-security; urgency=medium
 
-  * Rebuild
+  * debian/patches:
+    + CVE-2023-52138: Add 0006_use-unar-instead-of-cpio-for-CPIO-archives.patch.
+      Use unar instead of cpio for CPIO archives. (Closes: #1063494).
 
- -- Deepin Packages Builder <packages@deepin.org>  Mon, 14 Nov 2022 17:35:52 +0800
+ -- Mike Gabriel <mike.gabriel@das-netzwerkteam.de>  Tue, 13 Feb 2024 07:44:28 +0100
+
+engrampa (1.26.0-1+deb12u1) bookworm; urgency=medium
+
+  * debian/patches:
+    + Cherry-pick various memleak fixes from upstream:
+      0001_dlg-package-installer-fix-memory-leak.patch,
+      0002_fr-window-fix-memory-leak.patch,
+      0003_file-data-fix-memory-leak.patch, and
+      0005_fr-process-fix-memory-leak.patch.
+    + Add 0004_Fix-archive-file-save-as-function.patch. Fix archive 'save as'
+      function. (Closes: #913075).
+
+ -- Mike Gabriel <sunweaver@debian.org>  Fri, 29 Dec 2023 08:13:22 +0100
+
+engrampa (1.26.0-1) unstable; urgency=medium
+
+  [ Martin Wimpress ]
+  * New upstream release.
+  * debian/*.install:
+    + Updated for MATE 1.26.
+
+  [ Mike Gabriel ]
+  * debian/control:
+    + Bump Standards-Version: to 4.6.0. No changes needed.
+    + Add B-D: mate-submodules-source (>= 0.0~git20210623.f3091f9).
+  * debian/rules:
+    + Unpack libegg (mate-submodules) at the beginning of dh_auto_configure.
+  * debian/watch:
+    + Use format version 4.
+  * debian/copyright:
+    + Update copyright attributions.
+
+ -- Mike Gabriel <sunweaver@debian.org>  Sun, 12 Dec 2021 16:00:52 +0100
 
 engrampa (1.24.1-1) unstable; urgency=medium
 
